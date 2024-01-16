@@ -186,7 +186,10 @@ macro(add_tablegen target project)
     endif()
   endif()
 
-  if ((${project} STREQUAL LLVM OR ${project} STREQUAL MLIR) AND NOT LLVM_INSTALL_TOOLCHAIN_ONLY AND LLVM_BUILD_UTILS)
+  # (llvm|mlir|clang)-tblgen may also be used outside the respective projects.
+  if ((${project} STREQUAL LLVM OR ${project} STREQUAL MLIR OR
+       ${project} STREQUAL CLANG) AND
+      NOT LLVM_INSTALL_TOOLCHAIN_ONLY AND LLVM_BUILD_UTILS)
     set(export_to_llvmexports)
     if(${target} IN_LIST LLVM_DISTRIBUTION_COMPONENTS OR
         NOT LLVM_DISTRIBUTION_COMPONENTS)
