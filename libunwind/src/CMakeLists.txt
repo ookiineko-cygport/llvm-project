@@ -140,6 +140,7 @@ else()
 endif()
 
 # MINGW_LIBRARIES is defined in config-ix.cmake
+add_library_flags_if(CYGWIN "${CYGWIN_LIBRARIES}")
 add_library_flags_if(MINGW "${MINGW_LIBRARIES}")
 
 if (LIBUNWIND_ENABLE_SHARED AND
