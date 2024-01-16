@@ -540,7 +540,9 @@ function(cxx_add_basic_build_flags target)
   # Hide all inline function definitions which have not explicitly been marked
   # visible. This prevents new definitions for inline functions from appearing in
   # the dylib when get ODR used by another function.
+  if (NOT CYGWIN)
   target_add_compile_flags_if_supported(${target} PRIVATE -fvisibility-inlines-hidden)
+  endif()
 
   # Our visibility annotations are not quite right for non-Clang compilers,
   # so we end up not exporting all the symbols we should. In the future, we
@@ -784,6 +786,8 @@ function(cxx_link_system_libraries target)
 
   if (MINGW)
     target_link_libraries(${target} PRIVATE "${MINGW_LIBRARIES}")
+  elseif (CYGWIN)
+    target_link_libraries(${target} PRIVATE "${CYGWIN_LIBRARIES}")
   endif()
 
   if (LIBCXX_TARGETING_MSVC)
@@ -888,7 +892,9 @@ endif()
 # By default libc++ on Windows expects to use a shared library, which requires
 # the headers to use DLL import/export semantics. However when building a
 # static library only we modify the headers to disable DLL import/export.
-if (DEFINED WIN32 AND LIBCXX_ENABLE_STATIC AND NOT LIBCXX_ENABLE_SHARED)
+if ((WIN32 OR CYGWIN) AND LIBCXX_ENABLE_STATIC AND NOT LIBCXX_ENABLE_SHARED)
+  list(APPEND LIBCXX_COMPILE_FLAGS -Xclang -flto-visibility-public-std)
+  add_definitions(-D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS)
   message(STATUS "Generating custom __config for non-DLL Windows build")
   config_define(ON _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS)
 endif()

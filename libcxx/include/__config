@@ -67,7 +67,7 @@
 #    define _LIBCPP_OBJECT_FORMAT_ELF 1
 #  elif defined(__MACH__)
 #    define _LIBCPP_OBJECT_FORMAT_MACHO 1
-#  elif defined(_WIN32)
+#  elif defined(_WIN32) || defined(__CYGWIN__)
 #    define _LIBCPP_OBJECT_FORMAT_COFF 1
 #  elif defined(__wasm__)
 #    define _LIBCPP_OBJECT_FORMAT_WASM 1
@@ -309,6 +309,10 @@ If there are users of this configuration we are happy to provide support.
 #    endif // _BYTE_ORDER == _LITTLE_ENDIAN
 #  endif   // defined(__NetBSD__) || defined(__OpenBSD__)
 
+#if defined(__CYGWIN__)
+#  define _LIBCPP_SHORT_WCHAR   1
+#endif
+
 #  if defined(_WIN32)
 #    define _LIBCPP_WIN32API
 #    define _LIBCPP_LITTLE_ENDIAN
@@ -525,7 +529,7 @@ typedef __char32_t char32_t;
 #      define _LIBCPP_EXPORTED_FROM_ABI
 #    elif defined(_LIBCPP_BUILDING_LIBRARY)
 #      define _LIBCPP_DLL_VIS __declspec(dllexport)
-#      if defined(__MINGW32__)
+#      if defined(__MINGW32__) || defined(__CYGWIN__)
 #        define _LIBCPP_EXTERN_TEMPLATE_TYPE_VIS _LIBCPP_DLL_VIS
 #        define _LIBCPP_CLASS_TEMPLATE_INSTANTIATION_VIS
 #      else
@@ -630,7 +634,7 @@ typedef __char32_t char32_t;
 // TODO: We provide a escape hatch with _LIBCPP_NO_ABI_TAG for folks who want to avoid increasing
 //       the length of symbols with an ABI tag. In practice, we should remove the escape hatch and
 //       use compression mangling instead, see https://github.com/itanium-cxx-abi/cxx-abi/issues/70.
-#  ifndef _LIBCPP_NO_ABI_TAG
+#  if !defined(_LIBCPP_NO_ABI_TAG) && !defined(__CYGWIN__)
 #    define _LIBCPP_HIDE_FROM_ABI                                                                                      \
       _LIBCPP_HIDDEN _LIBCPP_EXCLUDE_FROM_EXPLICIT_INSTANTIATION                                                       \
           __attribute__((__abi_tag__(_LIBCPP_TOSTRING(_LIBCPP_VERSIONED_IDENTIFIER))))
@@ -649,7 +653,11 @@ typedef __char32_t char32_t;
 #  endif
 
 // Just so we can migrate to the new macros gradually.
+#  ifdef _LIBCPP_BUILDING_LIBRARY
+#    define _LIBCPP_INLINE_VISIBILITY
+#  else
 #  define _LIBCPP_INLINE_VISIBILITY _LIBCPP_HIDE_FROM_ABI
+#  endif
 
 // Inline namespaces are available in Clang/GCC/MSVC regardless of C++ dialect.
 // clang-format off
@@ -891,7 +899,11 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
 #  endif
 
 #  ifndef _LIBCPP_WEAK
+#    if defined(__CYGWIN__)
+#      define _LIBCPP_WEAK
+#    else
 #    define _LIBCPP_WEAK __attribute__((__weak__))
+#  endif
 #  endif
 
 // Thread API
@@ -911,6 +923,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
         defined(__APPLE__) ||                                                                                          \
         defined(__sun__) ||                                                                                            \
         defined(__MVS__) ||                                                                                            \
+        defined(__CYGWIN__) ||                                                                                         \
         defined(_AIX) ||                                                                                               \
         defined(__EMSCRIPTEN__)
 // clang-format on

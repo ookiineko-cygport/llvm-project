@@ -205,7 +205,7 @@ typedef basic_fstream<wchar_t> wfstream;
 _LIBCPP_PUSH_MACROS
 #include <__undef_macros>
 
-#if defined(_LIBCPP_MSVCRT) || defined(_NEWLIB_VERSION)
+#if defined(_LIBCPP_MSVCRT) || (defined(_NEWLIB_VERSION) && !defined(__CYGWIN__))
 #  define _LIBCPP_HAS_NO_OFF_T_FUNCTIONS
 #endif
 
