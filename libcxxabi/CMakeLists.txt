@@ -137,7 +137,7 @@ set(LIBCXXABI_LIBCXX_INCLUDES "" CACHE PATH
     "Specify path to libc++ includes.")
 
 set(LIBCXXABI_HERMETIC_STATIC_LIBRARY_DEFAULT OFF)
-if (WIN32)
+if (WIN32 OR CYGWIN)
   set(LIBCXXABI_HERMETIC_STATIC_LIBRARY_DEFAULT ON)
 endif()
 option(LIBCXXABI_HERMETIC_STATIC_LIBRARY
@@ -272,6 +272,11 @@ add_definitions(-D_LIBCXXABI_BUILDING_LIBRARY)
 # libcxxabi needs to, for various reasons, include the libcpp headers as if
 # it is being built as part of libcxx.
 add_definitions(-D_LIBCPP_BUILDING_LIBRARY)
+
+if (WIN32 OR CYGWIN)
+  # do not mark references to __cxa_* as dllimport
+  list(APPEND LIBCXXABI_COMPILE_FLAGS -Xclang -flto-visibility-public-std)
+endif()
 
 add_compile_flags_if_supported(-Werror=return-type)
 
