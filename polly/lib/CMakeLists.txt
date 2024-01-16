@@ -21,7 +21,7 @@ if (MSVC_IDE OR XCODE)
   file(GLOB_RECURSE POLLY_HEADER_FILES "${POLLY_SOURCE_DIR}/include/polly/*.h")
 endif ()
 
-set(POLLY_COMPONENTS
+set(LLVM_LINK_COMPONENTS
     Support
     Core
     ScalarOpts
@@ -46,7 +46,7 @@ set(POLLY_COMPONENTS
 # Polly-ACC requires the NVPTX backend to work. Ask LLVM about its libraries.
 if (GPU_CODEGEN)
   # This call emits an error if they NVPTX backend is not enable.
-  list(APPEND POLLY_COMPONENTS NVPTX)
+  list(APPEND LLVM_LINK_COMPONENTS NVPTX)
 endif ()
 
 # Use an object-library to add the same files to multiple libs without requiring
@@ -101,9 +101,6 @@ add_llvm_pass_plugin(Polly
   Transform/ManualOptimizer.cpp
   Transform/MatmulOptimizer.cpp
   ${POLLY_HEADER_FILES}
-
-  LINK_COMPONENTS
-  ${POLLY_COMPONENTS}
   )
 set_target_properties(obj.Polly PROPERTIES FOLDER "Polly")
 set_target_properties(Polly PROPERTIES FOLDER "Polly")
@@ -158,7 +155,7 @@ else ()
   # hosts. This is not the case for bugpoint. Use LLVM_POLLY_LINK_INTO_TOOLS=ON
   # instead which will automatically resolve the additional dependencies by
   # Polly.
-  target_link_libraries(LLVMPolly PUBLIC ${ISL_TARGET})
+  target_link_libraries(LLVMPolly PUBLIC ${ISL_TARGET} Polly)
   if (GPU_CODEGEN)
     target_link_libraries(LLVMPolly PUBLIC PollyPPCG)
   endif ()

@@ -111,6 +111,9 @@ if (NOT POLLY_BUNDLED_ISL)
   find_package(ISL MODULE REQUIRED)
   message(STATUS "Using external libisl ${ISL_VERSION} in: ${ISL_PREFIX}")
   set(ISL_TARGET ISL)
+  set(ISL_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/polly
+  )
 else()
   set(ISL_INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}/lib/External/isl/include

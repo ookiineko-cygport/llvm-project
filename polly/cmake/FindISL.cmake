@@ -15,7 +15,7 @@ foreach (libname IN LISTS ISL_LIBRARIES)
       list(APPEND hints  ${dir})
     endforeach()
   endif()
-  find_library(lib NAMES ${libname} HINTS ${hints} NO_DEFAULT_PATH)
+  find_library(lib NAMES ${libname} HINTS ${hints})
   set_property(TARGET ISL APPEND PROPERTY INTERFACE_LINK_LIBRARIES ${lib})
 endforeach()
 

@@ -22,6 +22,7 @@ macro(add_polly_library name)
   endif()
   add_library( ${name} ${libkind} ${srcs} )
   set_target_properties(${name} PROPERTIES FOLDER "Polly")
+  set_target_properties(${name} PROPERTIES SOVERSION "${LLVM_VERSION_MAJOR}")
 
   if( LLVM_COMMON_DEPENDS )
     add_dependencies( ${name} ${LLVM_COMMON_DEPENDS} )
@@ -45,6 +46,7 @@ macro(add_polly_library name)
     install(TARGETS ${name}
       EXPORT LLVMExports
       LIBRARY DESTINATION lib${LLVM_LIBDIR_SUFFIX}
+      RUNTIME DESTINATION bin
       ARCHIVE DESTINATION lib${LLVM_LIBDIR_SUFFIX})
   endif()
   set_property(GLOBAL APPEND PROPERTY LLVM_EXPORTS ${name})
