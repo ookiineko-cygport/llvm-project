@@ -374,7 +374,7 @@ emutls_get_address_array(uintptr_t index) {
   return array;
 }
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
 // Our emulated TLS implementation relies on local state (e.g. for the pthread
 // key), and if we duplicate this state across different shared libraries,
 // accesses to the same TLS variable from different shared libraries will yield
