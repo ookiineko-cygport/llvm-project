@@ -3637,7 +3637,7 @@ static llvm::GlobalVariable::LinkageTypes getTypeInfoLinkage(CodeGenModule &CGM,
           !CGM.getContext()
                .getTargetInfo()
                .getTriple()
-               .isWindowsGNUEnvironment())
+               .isOSCygMing())
         return CGM.getVTableLinkage(RD);
     }
 

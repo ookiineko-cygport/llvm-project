@@ -1,13 +1,14 @@
-//===--- MinGW.h - MinGW ToolChain Implementations --------------*- C++ -*-===//
+//===--- Cygwin.h - Cygwin ToolChain Implementations --------------*- C++ -*-===//
 //
-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-// See https://llvm.org/LICENSE.txt for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//                     The LLVM Compiler Infrastructure
+//
+// This file is distributed under the University of Illinois Open Source
+// License. See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_MINGW_H
-#define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_MINGW_H
+#ifndef LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_CYGWIN_H
+#define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_CYGWIN_H
 
 #include "Cuda.h"
 #include "Gnu.h"
@@ -20,11 +21,11 @@ namespace clang {
 namespace driver {
 namespace tools {
 
-/// MinGW -- Directly call GNU Binutils assembler and linker
-namespace MinGW {
+/// Cygwin -- Directly call GNU Binutils assembler and linker
+namespace Cygwin {
 class LLVM_LIBRARY_VISIBILITY Assembler : public Tool {
 public:
-  Assembler(const ToolChain &TC) : Tool("MinGW::Assemble", "assembler", TC) {}
+  Assembler(const ToolChain &TC) : Tool("Cygwin::Assemble", "assembler", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
 
@@ -36,7 +37,7 @@ public:
 
 class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
 public:
-  Linker(const ToolChain &TC) : Tool("MinGW::Linker", "linker", TC) {}
+  Linker(const ToolChain &TC) : Tool("Cygwin::Linker", "linker", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
   bool isLinkJob() const override { return true; }
@@ -50,28 +51,21 @@ private:
   void AddLibGCC(const llvm::opt::ArgList &Args,
                  llvm::opt::ArgStringList &CmdArgs) const;
 };
-} // end namespace MinGW
+} // end namespace Cygwin
 } // end namespace tools
 
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY MinGW : public ToolChain {
+class LLVM_LIBRARY_VISIBILITY Cygwin : public ToolChain {
 public:
-  MinGW(const Driver &D, const llvm::Triple &Triple,
+  Cygwin(const Driver &D, const llvm::Triple &Triple,
         const llvm::opt::ArgList &Args);
-
-  static void fixTripleArch(const Driver &D, llvm::Triple &Triple,
-                            const llvm::opt::ArgList &Args);
-
-  bool HasNativeLLVMSupport() const override;
 
   bool IsIntegratedAssemblerDefault() const override;
   bool IsUnwindTablesDefault(const llvm::opt::ArgList &Args) const override;
   bool isPICDefault() const override;
   bool isPIEDefault(const llvm::opt::ArgList &Args) const override;
   bool isPICDefaultForced() const override;
-
-  SanitizerMask getSupportedSanitizers() const override;
 
   llvm::ExceptionHandling GetExceptionModel(
       const llvm::opt::ArgList &Args) const override;
@@ -92,8 +86,6 @@ public:
 
   void printVerboseInfo(raw_ostream &OS) const override;
 
-  unsigned GetDefaultDwarfVersion() const override { return 4; }
-
 protected:
   Tool *getTool(Action::ActionClass AC) const override;
   Tool *buildLinker() const override;
@@ -105,18 +97,17 @@ private:
 
   std::string Base;
   std::string GccLibDir;
-  clang::driver::toolchains::Generic_GCC::GCCVersion GccVer;
   std::string Ver;
-  std::string SubdirName;
+  std::string Arch;
   mutable std::unique_ptr<tools::gcc::Preprocessor> Preprocessor;
   mutable std::unique_ptr<tools::gcc::Compiler> Compiler;
   void findGccLibDir();
-
-  bool NativeLLVMSupport;
+  llvm::ErrorOr<std::string> findGcc();
+  llvm::ErrorOr<std::string> findClangRelativeSysroot();
 };
 
 } // end namespace toolchains
 } // end namespace driver
 } // end namespace clang
 
-#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_MINGW_H
+#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_CYGWIN_H

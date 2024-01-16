@@ -418,11 +418,9 @@ toolchains::MinGW::MinGW(const Driver &D, const llvm::Triple &Triple,
 
   // The sequence for detecting a sysroot here should be kept in sync with
   // the testTriple function below.
-  if (getDriver().SysRoot.size())
-    Base = getDriver().SysRoot;
   // Look for <clang-bin>/../<triplet>; if found, use <clang-bin>/.. as the
   // base as it could still be a base for a gcc setup with libgcc.
-  else if (llvm::ErrorOr<std::string> TargetSubdir =
+  if (llvm::ErrorOr<std::string> TargetSubdir =
                findClangRelativeSysroot(getDriver(), getTriple(), SubdirName))
     Base = std::string(llvm::sys::path::parent_path(TargetSubdir.get()));
   else if (llvm::ErrorOr<std::string> GPPName = findGcc(getTriple()))
@@ -444,8 +442,12 @@ toolchains::MinGW::MinGW(const Driver &D, const llvm::Triple &Triple,
   getFilePaths().push_back(
       (Base + SubdirName + llvm::sys::path::get_separator() + "mingw/lib").str());
 
-  getFilePaths().push_back(Base + "lib");
-  // openSUSE
+  if (getDriver().SysRoot.size())
+    getFilePaths().push_back(getDriver().SysRoot + "/mingw/lib");
+  else
+#ifdef LLVM_ON_WIN32
+    getFilePaths().push_back(Base + "lib");
+#endif
   getFilePaths().push_back(Base + SubdirName + "/sys-root/mingw/lib");
 
   NativeLLVMSupport =
@@ -509,7 +511,7 @@ toolchains::MinGW::GetExceptionModel(const ArgList &Args) const {
   if (getArch() == llvm::Triple::x86_64 || getArch() == llvm::Triple::aarch64 ||
       getArch() == llvm::Triple::arm || getArch() == llvm::Triple::thumb)
     return llvm::ExceptionHandling::WinEH;
-  return llvm::ExceptionHandling::DwarfCFI;
+  return llvm::ExceptionHandling::SjLj;
 }
 
 SanitizerMask toolchains::MinGW::getSupportedSanitizers() const {
@@ -604,7 +606,12 @@ void toolchains::MinGW::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
   addSystemInclude(DriverArgs, CC1Args,
                    Base + SubdirName + llvm::sys::path::get_separator() + "usr/include");
 
-  addSystemInclude(DriverArgs, CC1Args, Base + "include");
+  if (getDriver().SysRoot.size())
+    addSystemInclude(DriverArgs, CC1Args, getDriver().SysRoot + "/mingw/include");
+#ifdef LLVM_ON_WIN32
+  else
+    addSystemInclude(DriverArgs, CC1Args, Base + "include");
+#endif
 }
 
 void toolchains::MinGW::AddClangCXXStdlibIncludeArgs(
@@ -665,12 +672,12 @@ static bool testTriple(const Driver &D, const llvm::Triple &Triple,
   // If an explicit sysroot is set, that will be used and we shouldn't try to
   // detect anything else.
   std::string SubdirName;
-  if (D.SysRoot.size())
-    return true;
   if (llvm::ErrorOr<std::string> TargetSubdir =
           findClangRelativeSysroot(D, Triple, SubdirName))
     return true;
   if (llvm::ErrorOr<std::string> GPPName = findGcc(Triple))
+    return true;
+  if (D.SysRoot.size())
     return true;
   // If we neither found a colocated sysroot or a matching gcc executable,
   // conclude that we can't know if this is the correct spelling of the triple.
@@ -710,4 +717,19 @@ void toolchains::MinGW::fixTripleArch(const Driver &D, llvm::Triple &Triple,
       Triple.getArch() == llvm::Triple::arm ||
       Triple.getArch() == llvm::Triple::thumb)
     Triple = adjustTriple(D, Triple, Args);
+}
+
+void toolchains::MinGW::AddCXXStdlibLibArgs(const ArgList &Args,
+                                    ArgStringList &CmdArgs) const {
+  switch (GetCXXStdlibType(Args)) {
+  case ToolChain::CST_Libcxx:
+    CmdArgs.push_back("-lc++");
+    CmdArgs.push_back("-lc++abi");
+    break;
+  case ToolChain::CST_Libstdcxx:
+    CmdArgs.push_back("-lstdc++");
+    if (Args.hasArg(options::OPT_static))
+      CmdArgs.push_back("-lpthread");
+    break;
+  }
 }

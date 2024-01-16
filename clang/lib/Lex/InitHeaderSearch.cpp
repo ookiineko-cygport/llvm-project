@@ -244,9 +244,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
     case llvm::Triple::Fuchsia:
       break;
     case llvm::Triple::Win32:
-      if (triple.getEnvironment() != llvm::Triple::Cygnus)
         break;
-      LLVM_FALLTHROUGH;
     default:
       // FIXME: temporary hack: hard-coded paths.
       AddPath("/usr/local/include", System, false);
@@ -332,14 +330,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
   case llvm::Triple::RTEMS:
     break;
   case llvm::Triple::Win32:
-    switch (triple.getEnvironment()) {
-    default: llvm_unreachable("Include management is handled in the driver.");
-    case llvm::Triple::Cygnus:
-      AddPath("/usr/include/w32api", System, false);
-      break;
-    case llvm::Triple::GNU:
-      break;
-    }
+    llvm_unreachable("Include management is handled in the driver.");
     break;
   default:
     break;
@@ -401,17 +392,7 @@ void InitHeaderSearch::AddDefaultCPlusPlusIncludePaths(
     llvm_unreachable("Include management is handled in the driver.");
     break;
   case llvm::Triple::Win32:
-    switch (triple.getEnvironment()) {
-    default: llvm_unreachable("Include management is handled in the driver.");
-    case llvm::Triple::Cygnus:
-      // Cygwin-1.7
-      AddMinGWCPlusPlusIncludePaths("/usr/lib/gcc", "i686-pc-cygwin", "4.7.3");
-      AddMinGWCPlusPlusIncludePaths("/usr/lib/gcc", "i686-pc-cygwin", "4.5.3");
-      AddMinGWCPlusPlusIncludePaths("/usr/lib/gcc", "i686-pc-cygwin", "4.3.4");
-      // g++-4 / Cygwin-1.5
-      AddMinGWCPlusPlusIncludePaths("/usr/lib/gcc", "i686-pc-cygwin", "4.3.2");
-      break;
-    }
+    llvm_unreachable("Include management is handled in the driver.");
     break;
   case llvm::Triple::DragonFly:
     AddPath("/usr/include/c++/5.0", CXXSystem, false);
@@ -446,10 +427,7 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
     return;
 
   case llvm::Triple::Win32:
-    if (triple.getEnvironment() != llvm::Triple::Cygnus ||
-        triple.isOSBinFormatMachO())
-      return;
-    break;
+    return;
 
   case llvm::Triple::UnknownOS:
     if (triple.isWasm())

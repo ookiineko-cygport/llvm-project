@@ -452,6 +452,14 @@ StringRef ToolChain::getOSLibName() const {
     return "sunos";
   case llvm::Triple::AIX:
     return "aix";
+  case llvm::Triple::Win32:
+    switch (Triple.getEnvironment()) {
+      case llvm::Triple::Cygnus:
+        return "cygwin";
+      default:
+        break;
+    }
+  // fall-through
   default:
     return getOS();
   }

@@ -376,7 +376,7 @@ std::string Linux::computeSysRoot() const {
     return std::string();
   }
 
-  if (!GCCInstallation.isValid() || !getTriple().isMIPS())
+  if (!GCCInstallation.isValid())
     return std::string();
 
   // Standalone MIPS toolchains use different names for sysroot folder
@@ -386,6 +386,9 @@ std::string Linux::computeSysRoot() const {
   const StringRef InstallDir = GCCInstallation.getInstallPath();
   const StringRef TripleStr = GCCInstallation.getTriple().str();
   const Multilib &Multilib = GCCInstallation.getMultilib();
+
+  if(!getTriple().isMIPS())
+    return std::string("/usr/" + TripleStr.str() + "/sys-root");
 
   std::string Path =
       (InstallDir + "/../../../../" + TripleStr + "/libc" + Multilib.osSuffix())
@@ -652,6 +655,7 @@ void Linux::addLibStdCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
   const GCCVersion &Version = GCCInstallation.getVersion();
 
   const std::string LibStdCXXIncludePathCandidates[] = {
+      GCCInstallation.getInstallPath().str() + "/include/c++",
       // Android standalone toolchain has C++ headers in yet another place.
       LibDir.str() + "/../" + TripleStr.str() + "/include/c++/" + Version.Text,
       // Freescale SDK C++ headers are directly in <sysroot>/usr/include/c++,

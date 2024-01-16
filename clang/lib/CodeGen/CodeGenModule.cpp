@@ -1131,8 +1131,8 @@ static bool shouldAssumeDSOLocal(const CodeGenModule &CGM,
     return false;
 
   const llvm::Triple &TT = CGM.getTriple();
-  if (TT.isWindowsGNUEnvironment()) {
-    // In MinGW, variables without DLLImport can still be automatically
+  if (TT.isOSCygMing()) {
+    // In Cygwin and MinGW, variables without DLLImport can still be automatically
     // imported from a DLL by the linker; don't mark variables that
     // potentially could come from another DLL as DSO local.
 
